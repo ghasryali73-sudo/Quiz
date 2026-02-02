@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حس‌سنج مدیریت بحران</title>
+
+<style>
+:root {
+  --primary:#6B9080;
+  --bg:#F6F4F1;
+  --text:#2F2F2F;
+  --card:#ffffff;
+}
+
+body {
+  margin:0;
+  font-family: "Vazirmatn", sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.container {
+  max-width:600px;
+  margin:auto;
+  padding:20px;
+}
+
+.card {
+  background:var(--card);
+  border-radius:18px;
+  padding:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,.06);
+  margin-bottom:20px;
+}
+
+h1,h2 {
+  text-align:center;
+}
+
+.progress {
+  height:8px;
+  background:#ddd;
+  border-radius:10px;
+  overflow:hidden;
+  margin-bottom:20px;
+}
+.progress-bar {
+  height:100%;
+  width:0%;
+  background:var(--primary);
+  transition:.3s;
+}
+
+.option {
+  border:1px solid #ddd;
+  border-radius:14px;
+  padding:14px;
+  margin-bottom:10px;
+  cursor:pointer;
+  transition:.2s;
+}
+.option:hover {
+  background:#f1f1f1;
+}
+.option.selected {
+  background:var(--primary);
+  color:#fff;
+  border-color:var(--primary);
+}
+
+button {
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:14px;
+  background:var(--primary);
+  color:#fff;
+  font-size:16px;
+  cursor:pointer;
+  margin-top:10px;
+}
+button.secondary {
+  background:#999;
+}
+
+button:disabled {
+  background:#aaa;
+}
+
+.result {
+  display:none;
+  text-align:center;
+}
+.score {
+  font-size:42px;
+  font-weight:bold;
+  margin:10px 0;
+}
+.type {
+  font-size:22px;
+  margin-bottom:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- Intro -->
+  <div class="card" id="intro">
+    <h1>در نبود همسرت، چقدر بحران‌ها رو مدیریت می‌کنی؟</h1>
+    <p style="text-align:center">
+      این تست برای شناخت بهتر خودته، نه قضاوت 🌱
+    </p>
+    <button onclick="startTest()">شروع تست</button>
+  </div>
+
+  <!-- Quiz -->
+  <div class="card" id="quiz" style="display:none">
+    <div class="progress">
+      <div class="progress-bar" id="progress"></div>
+    </div>
+    <h2 id="questionText"></h2>
+    <div id="options"></div>
+    <button id="nextBtn" onclick="nextQuestion()" disabled>سؤال بعد</button>
+  </div>
+
+  <!-- Result -->
+  <div class="card result" id="result">
+    <h2>نتیجه تست</h2>
+    <div class="score" id="score"></div>
+    <div class="type" id="type"></div>
+    <p id="analysis"></p>
+
+    <!-- ✅ دکمه تست جدید -->
+    <button onclick="restartTest()">🔄 شروع تست جدید</button>
+
+    <p style="margin-top:20px;font-size:14px;">
+      🎧 این تست بخشی از پروژه پادکستی علی است
+    </p>
+  </div>
+
+</div>
+
+<script>
+const questions = [
+  "برق قطع شده و همسرت خونه نیست، چیکار می‌کنی؟",
+  "از زیر سینک آب نشت می‌کنه…",
+  "نصفه‌شب صدای عجیبی میاد…",
+  "ماشین لباسشویی ارور می‌ده…",
+  "مهمان ناخوانده میاد…",
+  "یه خرج غیرمنتظره پیش میاد…",
+  "حالت خوب نیست ولی اورژانسی هم نیست…",
+  "همسایه اعتراض می‌کنه…",
+  "چند مشکل همزمان پیش میاد…",
+  "به همسرت دسترسی نداری…"
+];
+
+const answers = [
+  "خونسرد مدیریت می‌کنم",
+  "کمی بررسی و صبر می‌کنم",
+  "سریع تماس می‌گیرم",
+  "دچار اضطراب می‌شم"
+];
+
+let current = 0;
+let score = 0;
+let selectedValue = null;
+
+function startTest(){
+  document.getElementById("intro").style.display="none";
+  document.getElementById("quiz").style.display="block";
+  loadQuestion();
+}
+
+function loadQuestion(){
+  document.getElementById("questionText").innerText =
+    `سؤال ${current + 1}: ${questions[current]}`;
+
+  document.getElementById("progress").style.width =
+    (current / questions.length) * 100 + "%";
+
+  const opts = document.getElementById("options");
+  opts.innerHTML = "";
+  selectedValue = null;
+  document.getElementById("nextBtn").disabled = true;
+
+  [4,3,2,1].forEach((val,i)=>{
+    const div = document.createElement("div");
+    div.className="option";
+    div.innerText = answers[i];
+    div.onclick = ()=>{
+      document.querySelectorAll(".option").forEach(o=>o.classList.remove("selected"));
+      div.classList.add("selected");
+      selectedValue = val;
+      document.getElementById("nextBtn").disabled = false;
+    };
+    opts.appendChild(div);
+  });
+}
+
+function nextQuestion(){
+  score += selectedValue;
+  current++;
+
+  if(current < questions.length){
+    loadQuestion();
+  } else {
+    showResult();
+  }
+}
+
+function showResult(){
+  document.getElementById("quiz").style.display="none";
+  document.getElementById("result").style.display="block";
+
+  document.getElementById("score").innerText = `${score} از 40`;
+
+  let type="", analysis="";
+  if(score >= 34){
+    type="🟢 مدیر آرام خانه";
+    analysis="تو در شرایط بحرانی مستقل، آرام و قابل اتکا عمل می‌کنی.";
+  } else if(score >= 26){
+    type="🟡 همراه محتاط";
+    analysis="توان مدیریت داری اما گاهی نیاز به اطمینان بیشتری حس می‌کنی.";
+  } else if(score >= 18){
+    type="🟠 وابسته تصمیم";
+    analysis="در تصمیم‌های بحرانی بیشتر به حمایت دیگران تکیه می‌کنی.";
+  } else {
+    type="🔴 مضطرب بحران";
+    analysis="اضطراب در بحران بالاست، اما با تمرین کاملاً قابل بهبود است.";
+  }
+
+  document.getElementById("type").innerText = type;
+  document.getElementById("analysis").innerText = analysis;
+}
+
+function restartTest(){
+  score = 0;
+  current = 0;
+  selectedValue = null;
+
+  document.getElementById("result").style.display="none";
+  document.getElementById("quiz").style.display="block";
+
+  loadQuestion();
+}
+</script>
+
+</body>
+</html>
